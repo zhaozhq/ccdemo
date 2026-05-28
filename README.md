@@ -14,10 +14,10 @@
 
 ```bash
 # 运行程序
-go run main.go
+go run ./src/cmd/server
 
 # 构建可执行文件
-go build
+go build -o bin/ccdemo ./src/cmd/server
 
 # 整理依赖
 go mod tidy
@@ -27,7 +27,11 @@ go mod tidy
 
 ```
 .
-├── main.go          # 程序入口
+├── src/
+│   └── cmd/
+│   │   └── server/
+│   │       └── main.go  # 程序入口
+│   └── pkg/         # 库代码
 ├── go.mod           # 模块定义
 ├── CLAUDE.md        # 项目说明（Claude Code）
 └── .claude/         # Claude Code 配置
