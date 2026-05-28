@@ -50,8 +50,8 @@ fi
 # We are about to execute executing-plans. Check worktree status.
 _is_in_worktree() {
     local git_dir git_common superproject
-    git_dir=$(cd "$(git rev-parse --git-dir 2>/dev/null)" && pwd -P 2>/dev/null) || return 1
-    git_common=$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" && pwd -P 2>/dev/null) || return 1
+    git_dir=$(cd "$(git rev-parse --git-dir 2>/dev/null)" && pwd -P 2>/dev/null) || return 2
+    git_common=$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" && pwd -P 2>/dev/null) || return 2
     superproject=$(git rev-parse --show-superproject-working-tree 2>/dev/null || true)
 
     if [ -n "$superproject" ]; then
@@ -64,8 +64,13 @@ _is_in_worktree() {
     return 1
 }
 
-if _is_in_worktree; then
-    # Already in a worktree, allow
+_is_in_worktree; status=$?
+if [ "$status" -eq 2 ]; then
+    # Cannot determine worktree status — conservative allow
+    exit 0
+fi
+if [ "$status" -eq 0 ]; then
+    # In worktree, allow
     exit 0
 fi
 
