@@ -1,0 +1,4 @@
+- [设计文档目录规范](docs-design-principle.md) — docs目录存放设计文档，功能变动必须同步更新，确保代码与设计一致
+- [Superpowers 工程方法论](superpowers-methodology.md) — 强制使用 Superpowers Skill 体系，所有任务按流程执行
+- [企业安全规则](enterprise-security-rules.md) — 企业级安全红线，覆盖命令、文件访问、代码生成
+- [Git 工作树机制](git-worktree-mechanism.md) — 执行 executing-plans 前必须处于独立工作树，通过 PreToolUse Hook 强制拦截
