@@ -7,7 +7,10 @@ set -e
 # ============================================================================
 
 # Resolve project root (hooks/ is under .claude/)
-cd "$(dirname "$0")/../.."
+cd "$(dirname "$0")/../.." || {
+    echo "[worktree-guard] ERROR: cannot resolve project root" >&2
+    exit 0  # conservative allow on unexpected failure
+}
 
 # Helper: print banner
 _banner() {
@@ -39,8 +42,11 @@ fi
 # Check if this is a Skill tool call for executing-plans
 # The JSON structure from Claude Code hooks contains tool name and arguments.
 # We do a best-effort grep check; if ambiguous, we allow pass-through.
-IS_SKILL=$(echo "$TOOL_INPUT" | grep -q '"name"[[:space:]]*:[[:space:]]*"Skill"' && echo "yes" || echo "no")
-IS_EXECUTING=$(echo "$TOOL_INPUT" | grep -q 'executing-plans' && echo "yes" || echo "no")
+# Tightened patterns to reduce false positives.
+# Skill tool: look for '"name" : "Skill"' followed by comma or closing brace.
+IS_SKILL=$(echo "$TOOL_INPUT" | grep -qE '"name"[[:space:]]*:[[:space:]]*"Skill"[[:space:]]*[,}]' && echo "yes" || echo "no")
+# executing-plans: look for it as a standalone word to avoid matching inside strings.
+IS_EXECUTING=$(echo "$TOOL_INPUT" | grep -qE '\bexecuting-plans\b' && echo "yes" || echo "no")
 
 if [ "$IS_SKILL" != "yes" ] || [ "$IS_EXECUTING" != "yes" ]; then
     # Not executing-plans, allow pass-through
