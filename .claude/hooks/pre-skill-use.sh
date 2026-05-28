@@ -70,7 +70,8 @@ _is_in_worktree() {
     return 1
 }
 
-_is_in_worktree; status=$?
+status=0
+_is_in_worktree || status=$?
 if [ "$status" -eq 2 ]; then
     # Cannot determine worktree status — conservative allow
     exit 0
