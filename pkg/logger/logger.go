@@ -3,6 +3,7 @@ package logger
 import (
 	"os"
 	"strings"
+	"sync"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -10,6 +11,9 @@ import (
 
 // globalLogger is the package-level logger instance.
 var globalLogger *zap.Logger
+
+// mu protects globalLogger for concurrent access.
+var mu sync.RWMutex
 
 // Init initializes the global logger with the given configuration.
 // It creates three zapcore.Core instances (console, app file, error file)
@@ -70,7 +74,15 @@ func Init(cfg Config) error {
 	)
 
 	core := zapcore.NewTee(consoleCore, appCore, errorCore)
+
+	mu.Lock()
+	oldLogger := globalLogger
 	globalLogger = zap.New(core)
+	mu.Unlock()
+
+	if oldLogger != nil {
+		_ = oldLogger.Sync()
+	}
 
 	return nil
 }
@@ -79,10 +91,13 @@ func Init(cfg Config) error {
 // It ignores "sync /dev/stdout: bad file descriptor" errors which occur
 // on macOS when syncing stdout.
 func Sync() error {
-	if globalLogger == nil {
+	mu.RLock()
+	lg := globalLogger
+	mu.RUnlock()
+	if lg == nil {
 		return nil
 	}
-	err := globalLogger.Sync()
+	err := lg.Sync()
 	if err == nil {
 		return nil
 	}
@@ -95,35 +110,53 @@ func Sync() error {
 
 // Debug logs a message at DebugLevel.
 func Debug(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Debug(msg, fields...)
+	mu.RLock()
+	lg := globalLogger
+	mu.RUnlock()
+	if lg != nil {
+		lg.Debug(msg, fields...)
 	}
 }
 
 // Info logs a message at InfoLevel.
 func Info(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Info(msg, fields...)
+	mu.RLock()
+	lg := globalLogger
+	mu.RUnlock()
+	if lg != nil {
+		lg.Info(msg, fields...)
 	}
 }
 
 // Warn logs a message at WarnLevel.
 func Warn(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Warn(msg, fields...)
+	mu.RLock()
+	lg := globalLogger
+	mu.RUnlock()
+	if lg != nil {
+		lg.Warn(msg, fields...)
 	}
 }
 
 // Error logs a message at ErrorLevel.
 func Error(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Error(msg, fields...)
+	mu.RLock()
+	lg := globalLogger
+	mu.RUnlock()
+	if lg != nil {
+		lg.Error(msg, fields...)
 	}
 }
 
 // Fatal logs a message at FatalLevel, then calls os.Exit(1).
 func Fatal(msg string, fields ...zap.Field) {
-	if globalLogger != nil {
-		globalLogger.Fatal(msg, fields...)
+	mu.RLock()
+	lg := globalLogger
+	mu.RUnlock()
+	if lg != nil {
+		lg.Fatal(msg, fields...)
 	}
+	// Even if logger is not initialized, ensure the process exits.
+	os.Stderr.WriteString(msg + "\n")
+	os.Exit(1)
 }
