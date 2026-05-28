@@ -1,7 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"hello/pkg/logger"
+)
 
 func main() {
-	fmt.Println("Hello, World!")
+	logger.Init(logger.Config{
+		Dir:          "./logs",
+		FileMinLevel: "info",
+	})
+	defer logger.Sync()
+
+	logger.Info("Hello, World!")
+	logger.Debug("this is debug, screen only")
 }
