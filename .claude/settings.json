@@ -2,7 +2,43 @@
   "permissions": {
     "allow": [
       "Bash(go mod *)",
-      "Bash(go run *)"
+      "Bash(go run *)",
+      "Bash(go get *)",
+      "Bash(go test *)",
+      "Bash(go build *)",
+      "Bash(go vet *)",
+      "Bash(gofmt *)",
+      "Bash(goimports *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git -C *)",
+      "Bash(git push *)",
+      "Bash(git diff *)",
+      "Bash(git status *)",
+      "Bash(.claude/hooks/*.sh)"
+    ],
+    "additionalDirectories": [
+      "/Users/alvin/CY.localized/aicode/ccdemo/.claude"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [],
+        "command": "bash /Users/alvin/CY.localized/aicode/ccdemo/.claude/hooks/pre-skill-use.sh"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [],
+        "command": "bash /Users/alvin/CY.localized/aicode/ccdemo/.claude/hooks/post-edit.sh"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [],
+        "command": "bash /Users/alvin/CY.localized/aicode/ccdemo/.claude/hooks/stop-check.sh"
+      }
     ]
   }
 }
