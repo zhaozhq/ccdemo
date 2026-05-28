@@ -48,20 +48,23 @@ if [ "$IS_SKILL" != "yes" ] || [ "$IS_EXECUTING" != "yes" ]; then
 fi
 
 # We are about to execute executing-plans. Check worktree status.
-GIT_DIR=$(cd "$(git rev-parse --git-dir 2>/dev/null)" && pwd -P 2>/dev/null) || true
-GIT_COMMON=$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" && pwd -P 2>/dev/null) || true
-SUPERPROJECT=$(git rev-parse --show-superproject-working-tree 2>/dev/null || true)
+_is_in_worktree() {
+    local git_dir git_common superproject
+    git_dir=$(cd "$(git rev-parse --git-dir 2>/dev/null)" && pwd -P 2>/dev/null) || return 1
+    git_common=$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" && pwd -P 2>/dev/null) || return 1
+    superproject=$(git rev-parse --show-superproject-working-tree 2>/dev/null || true)
 
-IS_WORKTREE=false
-if [ -n "$SUPERPROJECT" ]; then
-    # submodule: treat as NOT in worktree
-    IS_WORKTREE=false
-elif [ "$GIT_DIR" != "$GIT_COMMON" ]; then
-    # linked worktree
-    IS_WORKTREE=true
-fi
+    if [ -n "$superproject" ]; then
+        # submodule: treat as NOT in worktree
+        return 1
+    elif [ "$git_dir" != "$git_common" ]; then
+        # linked worktree
+        return 0
+    fi
+    return 1
+}
 
-if [ "$IS_WORKTREE" = "true" ]; then
+if _is_in_worktree; then
     # Already in a worktree, allow
     exit 0
 fi
